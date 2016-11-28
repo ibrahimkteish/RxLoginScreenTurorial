@@ -25,21 +25,21 @@ extension AuthCellType: IdentifiableType {
 }
 
 enum LoginScreenState {
-  case ShowLogIn
-  case ShowSignUp
+  case showLogIn
+  case showSignUp
   
   var buttonTitle: String {
     switch self {
-    case .ShowLogIn:
+    case .showLogIn:
       return "Don't have an account?"
-    case .ShowSignUp:
+    case .showSignUp:
       return "Already have an account?"
     }
   }
   
   var cells: [AuthCellType] {
     switch self {
-    case .ShowLogIn:
+    case .showLogIn:
       return [
         .Headline,
         .Separator,
@@ -47,7 +47,7 @@ enum LoginScreenState {
         .PasswordTextField,
         .LoginButton
       ]
-    case .ShowSignUp:
+    case .showSignUp:
       return [
         .EmailTextField,
         .NameTextField,
@@ -65,7 +65,7 @@ class ViewController: UIViewController {
   @IBOutlet weak var tableView: UITableView!
   let footerButton = UIButton()
   
-  let screenState = Variable(LoginScreenState.ShowLogIn)
+  let screenState = Variable(LoginScreenState.showLogIn)
   
   let disposeBag = DisposeBag()
   
@@ -77,42 +77,42 @@ class ViewController: UIViewController {
     
     screenState.asObservable()
       .map { $0.buttonTitle }
-      .bindTo(footerButton.rx_title(.Normal))
+      .bindTo(footerButton.rx.title(for: .normal))
       .addDisposableTo(disposeBag)
     
-    footerButton.rx_tap
+    footerButton.rx.tap
       .asObservable()
       .withLatestFrom(screenState.asObservable())
       .map { state -> LoginScreenState in
         switch state {
-        case .ShowLogIn:
-          return .ShowSignUp
-        case .ShowSignUp:
-          return .ShowLogIn
+        case .showLogIn:
+          return .showSignUp
+        case .showSignUp:
+          return .showLogIn
         }
       }
       .bindTo(screenState)
       .addDisposableTo(disposeBag)
     
-    footerButton.setTitleColor(.blueColor(), forState: .Normal)
-    footerButton.titleLabel?.font = UIFont.systemFontOfSize(13)
-    footerButton.frame = CGRectMake(0, 0, 40, 20)
+    footerButton.setTitleColor(.blue, for: UIControlState())
+    footerButton.titleLabel?.font = UIFont.systemFont(ofSize: 13)
+    footerButton.frame = CGRect(x: 0, y: 0, width: 40, height: 20)
     tableView.tableFooterView = footerButton
     
     let dataSource = RxTableViewSectionedAnimatedDataSource<AuthSection>()
     dataSource.configureCell = { _, tableView, indexPath, item in
-      let cell = tableView.dequeueReusableCellWithIdentifier(item.rawValue, forIndexPath: indexPath)
+      let cell = tableView.dequeueReusableCell(withIdentifier: item.rawValue, for: indexPath)
       return cell
     }
     
-    dataSource.animationConfiguration = AnimationConfiguration(insertAnimation: .Fade,
-                                                               reloadAnimation: .Fade,
-                                                               deleteAnimation: .Fade)
+    dataSource.animationConfiguration = AnimationConfiguration(insertAnimation: .fade,
+                                                               reloadAnimation: .fade,
+                                                               deleteAnimation: .fade)
     
     screenState.asObservable()
       .map { $0.cells }
       .map { [AuthSection(model: 0, items: $0)] }
-      .bindTo(tableView.rx_itemsWithDataSource(dataSource))
+      .bindTo(tableView.rx.items(dataSource: dataSource))
       .addDisposableTo(disposeBag)
   }
 }
